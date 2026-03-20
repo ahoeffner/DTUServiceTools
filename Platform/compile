@@ -1,0 +1,22 @@
+#
+# On windows, just run
+# pyinstaller --onefile Platform.py --name platform-win
+# and mv platform-win.exe windows/platform.exe
+#
+
+pyinstaller --onefile Platform.py --name platform-mac
+
+docker run --rm --platform linux/amd64 -v $(pwd):/src/ -w /src/ python:3.9-slim \
+    /bin/bash -c "\
+    apt-get update && \
+    apt-get install -y binutils && \
+    pip install -r requirements && \
+    pyinstaller --onefile Platform.py --name platform-linux"
+
+rm *.spec
+mv dist/* .
+rm -rf dist
+rm -rf __pycache__
+
+mv platform-mac mac/platform
+mv platform-linux linux/platform

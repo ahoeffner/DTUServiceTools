@@ -1,0 +1,22 @@
+#
+# On windows, just run
+# pyinstaller --onefile Vault.py --name vault-win
+# and mv vault-win.exe windows/vault.exe
+#
+
+pyinstaller --onefile Vault.py --name vault-mac
+
+docker run --rm --platform linux/amd64 -v $(pwd):/src/ -w /src/ python:3.9-slim \
+    /bin/bash -c "\
+    apt-get update && \
+    apt-get install -y binutils && \
+    pip install -r requirements && \
+    pyinstaller --onefile Vault.py --name vault-linux"
+
+rm *.spec
+mv dist/* .
+rm -rf dist
+rm -rf __pycache__
+
+mv vault-mac mac/vault
+mv vault-linux linux/vault
