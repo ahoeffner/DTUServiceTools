@@ -3,6 +3,9 @@ import sys
 import argparse
 from enum import Enum
 from pathlib import Path
+
+from Git import Git
+from Docker import Docker
 from DockerVolume import DockerVolume
 
 
@@ -18,7 +21,7 @@ LIBPATH = "libraries"
 DOCKERPATH = "docker"
 
 JAVALIBS = ["spring","fusion"]
-CONTAINERS = ["registry", "kafka", "vault", "keycloak", "postgres"]
+CONTAINERS = ["kafka", "vault", "keycloak", "registry", "postgres"]
 
 class TOOLS(Enum) :
     Git    = ["git"    , "--version"]
@@ -30,10 +33,10 @@ class VOLUMES :
     volumes = [
         ["kafka-data",True],
         ["kafka-logs",True],
-        ["kafka-config",True],
-        ["kafka-secrets",True],
         ["vault-data",True],
-        ["vault-logs",True]]
+        ["vault-logs",True],
+        ["kafka-config",True],
+        ["kafka-secrets",True]]
 
 class DOCKER :
     network = "dtu-services"
@@ -43,20 +46,45 @@ class DOCKER :
 class Platform:
     def install(self):
         print("📦 Installing platform:\n")
-        volume = DockerVolume(FORCE,VERBOSE)
+        self.git()
 
-        for vol in VOLUMES.volumes:
-            volume.create(vol[0], chown=vol[1])
+        print()
+        self.volumes()
+
+        print()
+        self.docker()
 
 
     def update(self):
         print("🔄 Updating platform:\n")
 
+
     def start(self, services: list[str]):
         print("📈 Starting services:\n")
 
+
     def stop(self, services: list[str]):
         print("📉 Stopping services:\n")
+
+
+    def git(self):
+        git = Git(FORCE,VERBOSE)
+        git.update()
+
+
+    def docker(self):
+        docker = Docker(FORCE,VERBOSE)
+        docker.createNetwork(DOCKER.network)
+
+        for srv in DOCKER.containers:
+            docker.startContainer(Path(DOCKERPATH)/srv)
+
+
+    def volumes(self):
+        volume = DockerVolume(FORCE,VERBOSE)
+
+        for vol in VOLUMES.volumes:
+            volume.create(vol[0], chown=vol[1])
 
 
     def setup(self,path:str = None, secrets:str = None):

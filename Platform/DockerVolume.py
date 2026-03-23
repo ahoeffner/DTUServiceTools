@@ -4,7 +4,7 @@ import subprocess
 class DockerVolume:
     verbose:bool = False
 
-    def __init__(self,force:bool = False, verbose:bool = False) :
+    def __init__(self,force:bool = False, verbose:bool = False):
         self.force = force
         self.verbose = verbose
 
@@ -16,7 +16,7 @@ class DockerVolume:
         self.volumes = result.stdout.splitlines()
 
 
-    def create(self,name:str, chown:bool = False) -> bool :
+    def create(self,name:str, chown:bool = False) -> bool:
         try :
             if (not self.force and name in self.volumes) :
                 print(f"✅ Docker volume {name} already exists.")
