@@ -103,8 +103,17 @@ class Vault:
 
 
 
+
+class CustomParser(argparse.ArgumentParser):
+    def error(self, message):
+            print(f"\n❌ Error: {message}")
+            print("Tip: Use 'vault --help' to see the full list of available commands.\n")
+            self.exit(2)
+
+
+
 if __name__ == "__main__" :
-    parser = argparse.ArgumentParser(description="Vault Service Tool")
+    parser = CustomParser(description="Vault Service Tool")
 
     parser.add_argument("-a", "--addr", default=URL, help="Vault server address")
     parser.add_argument("-u", "--user", default=USR, help="Vault username/token")
