@@ -6,7 +6,7 @@ class Git:
         self.force = force
         self.verbose = verbose
 
-    def update(self):
+    def update(self) -> bool:
         try :
             if (self.verbose) : print("\ngit pull")
             subprocess.run(["git", "pull"], check=True, capture_output=True)
@@ -22,3 +22,5 @@ class Git:
         except Exception as e :
             print(f"❌ Failed to update submodules: {e}\n")
             return(False)
+
+        return(True)
