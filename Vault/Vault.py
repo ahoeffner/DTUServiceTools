@@ -123,8 +123,8 @@ if __name__ == "__main__" :
     ls_parser = subparsers.add_parser("ls", help="List secrets [path]")
     ls_parser.add_argument("path", nargs="?", default="/", help="Vault path to list (e.g. databases/)")
 
-    load_parser = subparsers.add_parser("load", help="Upload secrets from <file>")
-    load_parser.add_argument("file", help="Path to the source YAML file")
+    load_parser = subparsers.add_parser("load", help="Load secrets from <file>")
+    load_parser.add_argument("file", help="Path to the source file (yaml)")
 
     if (len(sys.argv) < 2) :
         print()
