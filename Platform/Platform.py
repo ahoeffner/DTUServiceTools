@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 
 from Git import Git
+from Maven import Maven
 from Docker import Docker
 
 
@@ -84,6 +85,12 @@ class Platform:
 
         print()
 
+        if (not self.maven() and not FORCE) :
+            return(False)
+
+        print()
+
+
         if (not self.volumes(docker) and not FORCE) :
             return(False)
 
@@ -115,6 +122,18 @@ class Platform:
     def git(self) -> bool:
         git = Git(FORCE,VERBOSE)
         return(git.update())
+
+
+
+    def maven(self) -> bool:
+        mvn = Maven(FORCE,VERBOSE)
+
+        for lib in JAVALIBS:
+            if (not mvn.install(Path(LIBPATH)/lib) and not FORCE):
+                return(False)
+
+        return(True)
+
 
 
 
