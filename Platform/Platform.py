@@ -19,8 +19,6 @@ FORCE = False
 VERBOSE = False
 PLATFORM = None
 
-SECRETS = None
-
 LIBPATH = "libraries"
 DOCKERPATH = "docker"
 
@@ -215,9 +213,8 @@ class Platform:
 
 
 
-    def setup(self,path:str = None, secrets:str = None):
+    def setup(self,path:str = None):
         global HOME
-        global SECRETS
         global PLATFORM
 
         PLATFORM = osp.system().lower()
@@ -231,9 +228,6 @@ class Platform:
                 sys.exit(1)
 
             os.chdir(HOME)
-
-            if (secrets != None):
-                SECRETS = os.path.abspath(secrets)
             return
 
         if (HOME == None):
@@ -258,19 +252,6 @@ class Platform:
 
         HOME = str(dir)
 
-        if (secrets != None):
-            SECRETS = os.path.abspath(secrets)
-
-
-
-    def path(self):
-        return(HOME)
-
-    def libpath(self):
-        return(LIBPATH)
-
-    def dockerpath(self):
-        return(DOCKERPATH)
 
 
 class CustomParser(argparse.ArgumentParser):
@@ -293,8 +274,7 @@ if __name__ == "__main__" :
     parser.add_argument("-f", "--force",action="store_true",help="Force commands")
     parser.add_argument("-v", "--verbose",action="store_true",help="Print commands")
     parser.add_argument("-c", "--check",action="store_true",help="Check prerequisites")
-    parser.add_argument("-p", "--path", type=str, metavar="PATH", help="Set installation path")
-    parser.add_argument("-s", "--secrets", type=str, metavar="PATH", help="Set path to vault secrets")
+    parser.add_argument("-p", "--path", type=str, metavar="path", help="Set installation path")
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
 
@@ -343,7 +323,7 @@ if __name__ == "__main__" :
     VERBOSE = args.verbose
 
     platform:Platform = Platform()
-    platform.setup(args.path, args.secrets)
+    platform.setup(args.path)
 
     print("\n\n"+"-"*64)
     print(f"  🏠 home: {HOME}  os: {PLATFORM}")
