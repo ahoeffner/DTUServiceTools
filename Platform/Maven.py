@@ -9,7 +9,7 @@ class Maven :
 
     def install(self,path:str) -> bool :
         try :
-            if (self.verbose) : print(f"mvn clean install -f {path}")
+            if (self.verbose) : print(f"   mvn clean install -f {path}")
 
             subprocess.run(
                 ["mvn", "clean", "install"],
@@ -19,11 +19,11 @@ class Maven :
                 text=True             # Returns output as strings instead of bytes
             )
 
-            print(f"✅ Maven library @{path} installed successfully")
+            print(f"   ✅ Maven library @{path} installed successfully")
             return(True)
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Maven install failed with error: {e.stderr}")
+            print(f"   ❌ Maven install failed with error: {e.stderr}")
         except Exception as e :
-            print(f"❌ Failed to install library {path}: {e}\n")
+            print(f"   ❌ Failed to install library {path}: {e}\n")
             return(False)

@@ -22,17 +22,17 @@ class Docker :
                 capture_output=True, text=True, check=True).stdout.splitlines()
 
             if name in networks:
-                print(f"✅ Docker network {name} already exists.\n")
+                print(f"   ✅ Docker network {name} already exists.\n")
                 return(True)
 
-            if (self.verbose) : print("\ndocker network create "+name)
+            if (self.verbose) : print("\n   docker network create "+name)
             subprocess.run(["docker", "network", "create", name], check=True)
-            print(f"✅ Docker network {name} was installed.\n")
+            print(f"   ✅ Docker network {name} was installed.\n")
 
             return(True)
 
         except Exception as e :
-            print(f"❌ Failed to manage Docker networks: {e}\n")
+            print(f"   ❌ Failed to manage Docker networks: {e}\n")
             return(False)
 
 
@@ -40,14 +40,14 @@ class Docker :
     def volume(self,name:str, chown:bool = False) -> bool:
         try :
             if (not self.force and name in self.volumes) :
-                print(f"✅ Docker volume {name} already exists.")
+                print(f"   ✅ Docker volume {name} already exists.")
                 return(True)
 
-            if (self.verbose) : print("\ndocker volume create "+name)
+            if (self.verbose) : print("\n   docker volume create "+name)
             subprocess.run(["docker", "volume", "create", name], check=True, capture_output=True)
 
             if (chown) :
-                if (self.verbose) : print("docker run --rm -v "+name+":/mnt busybox chown -R 1000:1000 /mnt")
+                if (self.verbose) : print("   docker run --rm -v "+name+":/mnt busybox chown -R 1000:1000 /mnt")
                 subprocess.run(
                 [
                     "docker", "run", "--rm",
@@ -56,18 +56,18 @@ class Docker :
                 ],
                 check=True, capture_output=True)
 
-            print(f"✅ Docker volume {name} was installed.")
+            print(f"   ✅ Docker volume {name} was installed.")
 
             return(True)
 
         except Exception as e :
-            print(f"❌ Failed to manage Docker volumes: {e}\n")
+            print(f"   ❌ Failed to manage Docker volumes: {e}\n")
             return(False)
 
 
     def start(self,path:str) -> bool :
         try :
-            if (self.verbose) : print(f"\ndocker compose -f {path} up -d")
+            if (self.verbose) : print(f"\n   docker compose -f {path} up -d")
             subprocess.run(
                 ["docker", "compose", "up", "-d"],
                 cwd=path,             # Runs the command in the right folder
@@ -76,19 +76,19 @@ class Docker :
                 text=True             # Returns output as strings instead of bytes
             )
 
-            print(f"✅ Docker container @{path} started successfully")
+            print(f"   ✅ Docker container @{path} started successfully")
             return(True)
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Docker Compose failed with error: {e.stderr}")
+            print(f"   ❌ Docker Compose failed with error: {e.stderr}")
         except Exception as e :
-            print(f"❌ Failed to start container {path}: {e}\n")
+            print(f"   ❌ Failed to start container {path}: {e}\n")
             return(False)
 
 
     def stop(self,path:str) -> bool :
         try :
-            if (self.verbose) : print(f"\ndocker compose -f {path} up -d")
+            if (self.verbose) : print(f"\n   docker compose -f {path} up -d")
             subprocess.run(
                 ["docker", "compose", "down"],
                 cwd=path,             # Runs the command in the right folder
@@ -97,11 +97,11 @@ class Docker :
                 text=True             # Returns output as strings instead of bytes
             )
 
-            print(f"✅ Docker container @{path} started successfully")
+            print(f"   ✅ Docker container @{path} stopped successfully")
             return(True)
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Docker Compose failed with error: {e.stderr}")
+            print(f"   ❌ Docker Compose failed with error: {e.stderr}")
         except Exception as e :
-            print(f"❌ Failed to start container {path}: {e}\n")
+            print(f"   ❌ Failed to stop container {path}: {e}\n")
             return(False)

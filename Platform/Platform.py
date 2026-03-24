@@ -52,25 +52,27 @@ class Platform:
     def check(self) -> bool:
         check:bool = True
 
-        print("\n\nChecking system dependencies...\n" + "-"*32)
+        print("Checking system dependencies...\n" + "-"*32)
 
         for tool in TOOLS :
             if (not self.checkTool(tool.name,tool.value)) :
                 check = False
 
-        print("")
+        if (check): print(f"   ✅ system dependencies are satisfied.")
+        else: print(f"   ❌ system dependencies are NOT satisfied.")
+
         return(check)
 
 
 
     def checkTool(self,name:str,command:str) -> bool:
         try:
-            if (VERBOSE) : print("\n"+" ".join(command))
+            if (VERBOSE) : print("\n.  "+" ".join(command))
             subprocess.run(command, check=True, capture_output=True, text=True)
-            print(f"✅ {name} is installed.")
+            print(f"   ✅ {name} is installed.")
             return(True)
         except :
-            print(f"❌ {name} is NOT installed or not in PATH.")
+            print(f"   ❌ {name} is NOT installed or not in PATH.")
             return(False)
 
 
@@ -90,7 +92,6 @@ class Platform:
 
         print()
 
-
         if (not self.volumes(docker) and not FORCE) :
             return(False)
 
@@ -104,28 +105,65 @@ class Platform:
 
 
 
-    def update(self):
+    def update(self) -> bool:
         print("🔄 Updating platform:\n")
 
+        if (not self.git() and not FORCE) :
+            return(False)
+
+        print()
+
+        if (not self.maven() and not FORCE) :
+            return(False)
+
+        return(True)
 
 
-    def start(self, services: list[str]):
-        print("📈 Starting services:\n")
+
+
+    def start(self, services:list[str] = None) -> bool:
+        docker:Docker = Docker(FORCE,VERBOSE)
+
+        if (services != None) :
+            for srv in services:
+                if (not self.container(docker,srv)):
+                    return(False)
+            return(True)
+
+
+        if (not self.containers(docker) and not FORCE) :
+            return(False)
 
 
 
-    def stop(self, services: list[str]):
-        print("📉 Stopping services:\n")
+    def stop(self, services: list[str] = None) -> bool:
+        docker:Docker = Docker(FORCE,VERBOSE)
+
+        if (not services == None):
+            for srv in services:
+                if (not self.container(docker,srv,False)):
+                    return(False)
+            return(True)
+
+
+        if (not self.containers(docker,False) and not FORCE) :
+            return(False)
+
+        return(True)
 
 
 
     def git(self) -> bool:
+        print("🔄 Updating sources:")
+
         git = Git(FORCE,VERBOSE)
         return(git.update())
 
 
 
     def maven(self) -> bool:
+        print("🔄 Installing libraries:")
+
         mvn = Maven(FORCE,VERBOSE)
 
         for lib in JAVALIBS:
@@ -136,13 +174,18 @@ class Platform:
 
 
 
+    def containers(self, docker:Docker, start:bool = True) -> bool:
 
-    def containers(self, docker:Docker) -> bool:
-        if (not docker.network(DOCKER.network)):
-            return(False)
+        if (start) :
+            print("🔄 Checking docker networks:")
+            if (not docker.network(DOCKER.network)):
+                return(False)
+
+        if (start) : print("🔄 Starting services:")
+        else : print("🔄 Stopping services:")
 
         for srv in CONTAINERS:
-            if (not self.container(docker,srv)):
+            if (not self.container(docker,srv,start)):
                 return(False)
 
         return(True)
@@ -162,9 +205,12 @@ class Platform:
 
 
     def volumes(self, docker:Docker):
+        print("🔄 Checking docker volumes:")
+
         for vol in VOLUMES.volumes:
             if (not docker.volume(vol[0], chown=vol[1])):
                 return(False)
+
         return(True)
 
 
@@ -304,20 +350,27 @@ if __name__ == "__main__" :
     print("-"*64)
     print("\n")
 
-
-
     if (args.check):
-        if (not FORCE and not platform.check()) :
+        if (not platform.check() and not FORCE) :
             sys.exit(1)
+        print()
 
     match args.command:
         case "start":
-            if (args.service == None): platform.start(CONTAINERS)
-            else: platform.start([args.service])
+            if (args.service == None):
+                print("🔄 Starting all services:\n")
+                platform.start()
+            else:
+                print("🔄 Starting services:")
+                platform.start([args.service])
 
         case "stop":
-            if (args.service == None): platform.stop(CONTAINERS)
-            else: platform.stop([args.service])
+            if (args.service == None):
+                print("🔄 Stopping all services:\n")
+                platform.stop()
+            else:
+                print("🔄 Stopping services:")
+                platform.stop([args.service])
 
         case "update":
             platform.update()

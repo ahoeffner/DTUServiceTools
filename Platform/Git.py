@@ -8,19 +8,22 @@ class Git:
 
     def update(self) -> bool:
         try :
-            if (self.verbose) : print("\ngit pull")
+            if (self.verbose) : print("\n.  git pull")
             subprocess.run(["git", "pull"], check=True, capture_output=True)
+            print(f"   ✅ Sources updated successfully")
+
 
         except Exception as e :
-            print(f"❌ Failed to update Git: {e}\n")
+            print(f"   ❌ Failed to update sources: {e}\n")
             return(False)
 
         try :
-            if (self.verbose) : print("\ngit submodule update --init --recursive")
+            if (self.verbose) : print("\n   git submodule update --init --recursive")
             subprocess.run(["git", "submodule", "update", "--init", "--recursive"], check=True, capture_output=True)
+            print(f"   ✅ Submodules updated successfully")
 
         except Exception as e :
-            print(f"❌ Failed to update submodules: {e}\n")
+            print(f"   ❌ Failed to update submodules: {e}\n")
             return(False)
 
         return(True)
