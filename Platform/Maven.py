@@ -19,11 +19,12 @@ class Maven :
                 text=True             # Returns output as strings instead of bytes
             )
 
-            print(f"   ✅ Maven library @{path} installed successfully")
+            print(f"   ✅ Maven library '{path}' installed successfully")
             return(True)
 
         except subprocess.CalledProcessError as e:
-            print(f"   ❌ Maven install failed with error: {e.stderr}")
+            print(f"   ❌ Maven library '{path}' installation failed")
+            if (self.verbose) : print(e.stderr)
         except Exception as e :
-            print(f"   ❌ Failed to install library {path}: {e}\n")
+            print(f"   ❌ Maven library '{path}' installation failed: {e}\n")
             return(False)
