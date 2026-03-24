@@ -1,12 +1,14 @@
 import os
 import sys
 import argparse
+import subprocess
+import platform as osp
+
 from enum import Enum
 from pathlib import Path
 
 from Git import Git
 from Docker import Docker
-from DockerVolume import DockerVolume
 
 
 
@@ -14,6 +16,7 @@ HOME = None
 
 FORCE = False
 VERBOSE = False
+PLATFORM = None
 
 SECRETS = None
 
@@ -43,53 +46,117 @@ class DOCKER :
     containers = CONTAINERS
 
 
+
 class Platform:
-    def install(self):
+    def check(self) -> bool:
+        check:bool = True
+
+        print("\n\nChecking system dependencies...\n" + "-"*32)
+
+        for tool in TOOLS :
+            if (not self.checkTool(tool.name,tool.value)) :
+                check = False
+
+        print("")
+        return(check)
+
+
+
+    def checkTool(self,name:str,command:str) -> bool:
+        try:
+            if (VERBOSE) : print("\n"+" ".join(command))
+            subprocess.run(command, check=True, capture_output=True, text=True)
+            print(f"✅ {name} is installed.")
+            return(True)
+        except :
+            print(f"❌ {name} is NOT installed or not in PATH.")
+            return(False)
+
+
+
+    def install(self) -> bool:
         print("📦 Installing platform:\n")
-        self.git()
+
+        docker:Docker = Docker(FORCE,VERBOSE)
+
+        if (not self.git() and not FORCE) :
+            return(False)
 
         print()
-        self.volumes()
+
+        if (not self.volumes(docker) and not FORCE) :
+            return(False)
 
         print()
-        self.docker()
+
+        if (not self.containers(docker) and not FORCE) :
+            return(False)
+
+        print()
+        return(True)
+
 
 
     def update(self):
         print("🔄 Updating platform:\n")
 
 
+
     def start(self, services: list[str]):
         print("📈 Starting services:\n")
+
 
 
     def stop(self, services: list[str]):
         print("📉 Stopping services:\n")
 
 
-    def git(self):
+
+    def git(self) -> bool:
         git = Git(FORCE,VERBOSE)
-        git.update()
+        return(git.update())
 
 
-    def docker(self):
-        docker = Docker(FORCE,VERBOSE)
-        docker.createNetwork(DOCKER.network)
 
-        for srv in DOCKER.containers:
-            docker.startContainer(Path(DOCKERPATH)/srv)
+    def containers(self, docker:Docker) -> bool:
+        if (not docker.network(DOCKER.network)):
+            return(False)
+
+        for srv in CONTAINERS:
+            if (not self.container(docker,srv)):
+                return(False)
+
+        return(True)
 
 
-    def volumes(self):
-        volume = DockerVolume(FORCE,VERBOSE)
+    def container(self, docker:Docker, name:str, start:bool = True) -> bool:
+        if (start) :
+            if (not docker.start(Path(DOCKERPATH)/name)):
+                return(False)
 
+        else :
+            if (not docker.stop(Path(DOCKERPATH)/name)):
+                return(False)
+
+        return(True)
+
+
+
+    def volumes(self, docker:Docker):
         for vol in VOLUMES.volumes:
-            volume.create(vol[0], chown=vol[1])
+            if (not docker.volume(vol[0], chown=vol[1])):
+                return(False)
+        return(True)
+
 
 
     def setup(self,path:str = None, secrets:str = None):
         global HOME
         global SECRETS
+        global PLATFORM
+
+        PLATFORM = osp.system().lower()
+        if (PLATFORM == "darwin") : PLATFORM = "mac"
 
         if (path != None):
             HOME = os.path.abspath(path)
@@ -148,6 +215,7 @@ class CustomParser(argparse.ArgumentParser):
             self.exit(2)
 
 
+
 if __name__ == "__main__" :
     helptext = f"services:\n  " + "\n  ".join(CONTAINERS)
 
@@ -159,6 +227,7 @@ if __name__ == "__main__" :
 
     parser.add_argument("-f", "--force",action="store_true",help="Force commands")
     parser.add_argument("-v", "--verbose",action="store_true",help="Print commands")
+    parser.add_argument("-c", "--check",action="store_true",help="Check prerequisites")
     parser.add_argument("-p", "--path", type=str, metavar="PATH", help="Set installation path")
     parser.add_argument("-s", "--secrets", type=str, metavar="PATH", help="Set path to vault secrets")
 
@@ -199,7 +268,7 @@ if __name__ == "__main__" :
 
     args = parser.parse_args()
 
-    if (args.command == None) :
+    if (args.command == None and not args.check) :
         print()
         parser.print_help()
         print()
@@ -211,7 +280,16 @@ if __name__ == "__main__" :
     platform:Platform = Platform()
     platform.setup(args.path, args.secrets)
 
-    print(f"\n🏠 : {HOME}\n")
+    print("\n\n"+"-"*64)
+    print(f"  🏠 home: {HOME}  os: {PLATFORM}")
+    print("-"*64)
+    print("\n")
+
+
+
+    if (args.check):
+        if (not FORCE and not platform.check()) :
+            sys.exit(1)
 
     match args.command:
         case "start":
@@ -227,3 +305,5 @@ if __name__ == "__main__" :
 
         case "install":
             platform.install()
+
+    print()

@@ -6,8 +6,16 @@ class Docker :
         self.force = force
         self.verbose = verbose
 
+        result = subprocess.run(
+            ["docker", "volume", "ls", "-q"],
+            capture_output=True, text=True, check=True
+        )
 
-    def createNetwork(self,name:str) -> bool :
+        self.volumes = result.stdout.splitlines()
+
+
+
+    def network(self,name:str) -> bool :
         try :
             networks = subprocess.run(
                 ["docker", "network", "ls", "--format", "{{.Name}}"],
@@ -28,7 +36,36 @@ class Docker :
             return(False)
 
 
-    def startContainer(self,path:str) -> bool :
+
+    def volume(self,name:str, chown:bool = False) -> bool:
+        try :
+            if (not self.force and name in self.volumes) :
+                print(f"✅ Docker volume {name} already exists.")
+                return(True)
+
+            if (self.verbose) : print("\ndocker volume create "+name)
+            subprocess.run(["docker", "volume", "create", name], check=True, capture_output=True)
+
+            if (chown) :
+                if (self.verbose) : print("docker run --rm -v "+name+":/mnt busybox chown -R 1000:1000 /mnt")
+                subprocess.run(
+                [
+                    "docker", "run", "--rm",
+                    "-v", f"{name}:/mnt",
+                    "busybox", "chown", "-R", "1000:1000", "/mnt"
+                ],
+                check=True, capture_output=True)
+
+            print(f"✅ Docker volume {name} was installed.")
+
+            return(True)
+
+        except Exception as e :
+            print(f"❌ Failed to manage Docker volumes: {e}\n")
+            return(False)
+
+
+    def start(self,path:str) -> bool :
         try :
             if (self.verbose) : print(f"\ndocker compose -f {path} up -d")
             subprocess.run(
@@ -49,3 +86,22 @@ class Docker :
             return(False)
 
 
+    def stop(self,path:str) -> bool :
+        try :
+            if (self.verbose) : print(f"\ndocker compose -f {path} up -d")
+            subprocess.run(
+                ["docker", "compose", "down"],
+                cwd=path,             # Runs the command in the right folder
+                check=True,           # Raises CalledProcessError if the command fails
+                capture_output=True,  # Captures stdout and stderr
+                text=True             # Returns output as strings instead of bytes
+            )
+
+            print(f"✅ Docker container @{path} started successfully")
+            return(True)
+
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Docker Compose failed with error: {e.stderr}")
+        except Exception as e :
+            print(f"❌ Failed to start container {path}: {e}\n")
+            return(False)
