@@ -6,7 +6,7 @@
 
 pyinstaller --onefile Vault.py --name vault-mac
 
-docker run --rm --platform linux/amd64 -v $(pwd):/src/ -w /src/ python:3.9-slim \
+docker run --rm --platform linux/amd64 -v $(pwd):/src/ -w /src/ python:3.11-slim \
     /bin/bash -c "\
     apt-get update && \
     apt-get install -y binutils && \
